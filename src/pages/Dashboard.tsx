@@ -16,6 +16,10 @@ function Dashboard() {
   const [content, setContent] = useState("");
   const navigate = useNavigate();
   const auth = useContext(AuthContext); // Get authentication context
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+const [editTitle, setEditTitle] = useState("");
+const [editContent, setEditContent] = useState("");
+
 
   // 🔹 Redirect to home if not logged in
   useEffect(() => {
@@ -29,6 +33,11 @@ function Dashboard() {
       .then((response) => setPosts(response))
       .catch((error) => console.error("Error fetching posts:", error));
   }, []);
+  const startEditing = (post: Post) => {
+    setEditingPostId(post._id);
+    setEditTitle(post.title);
+    setEditContent(post.content);
+  };
   
 
   const handleCreatePost = async () => {
@@ -39,6 +48,19 @@ function Dashboard() {
       setContent("");
     } catch (error) {
       console.error("Error creating post:", error);
+    }
+  };
+  const handleUpdatePost = async () => {
+    if (!editingPostId) return;
+  
+    try {
+      const updatedPost = await api.updatePost(editingPostId, editTitle, editContent);
+      setPosts(posts.map((post) => (post._id === editingPostId ? updatedPost : post)));
+      setEditingPostId(null);
+      setEditTitle("");
+      setEditContent("");
+    } catch (error) {
+      console.error("Error updating post:", error);
     }
   };
   
@@ -62,12 +84,32 @@ function Dashboard() {
 
       <h2>Your Posts</h2>
       {posts.map((post) => (
-        <div key={post._id}>
-          <h3>{post.title}</h3>
-          <p>{post.content.substring(0, 100)}...</p>
-          <button onClick={() => handleDeletePost(post._id)}>Delete</button>
-        </div>
-      ))}
+  <div key={post._id}>
+    {editingPostId === post._id ? (
+      <div>
+        <input
+          type="text"
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+        />
+        <textarea
+          value={editContent}
+          onChange={(e) => setEditContent(e.target.value)}
+        />
+        <button onClick={handleUpdatePost}>Save</button>
+        <button onClick={() => setEditingPostId(null)}>Cancel</button>
+      </div>
+    ) : (
+      <div>
+        <h3>{post.title}</h3>
+        <p>{post.content.substring(0, 100)}...</p>
+        <button onClick={() => startEditing(post)}>Edit</button>
+        <button onClick={() => handleDeletePost(post._id)}>Delete</button>
+      </div>
+    )}
+  </div>
+))}
+
     </div>
   );
 }

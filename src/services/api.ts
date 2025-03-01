@@ -51,6 +51,25 @@ export const loginUser = async (email: any, password: any) => {
   const data = await res.json();
   return data.token;
 };
+export const updatePost = async (id: string, title: string, content: string) => {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/posts/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ title, content }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update post");
+  }
+
+  return res.json();
+};
+
 
 export const deletePost = async (id: string) => {
   const token = localStorage.getItem("token");
