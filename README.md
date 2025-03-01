@@ -14,10 +14,10 @@ This is the frontend for the Blog App, built using **React.js**. It provides a u
 ## 🏗️ Project Structure
 
 /src
- ├── /components         # Reusable components (Navbar, Form, etc.)
- ├── /pages              # Pages (Home, Login, Register, Dashboard)
- ├── /services           # API calls
- ├── /context            # Authentication Context
- ├── App.js              # Main React component
- ├── index.js            # Entry point
- ├── index.css          # Global CSS styles
+ * components         # Reusable components (Navbar, Form, etc.)
+ * pages              # Pages (Home, Login, Register, Dashboard)
+ * services           # API calls
+ * context            # Authentication Context
+ * App.js              # Main React component
+ * index.js            # Entry point
+ * index.css          # Global CSS styles
