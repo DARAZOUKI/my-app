@@ -3,7 +3,7 @@ import * as api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import PostItem from "../components/PostItem";
-
+import PostForm from "../components/PostForm";
 
 interface Post {
   _id: string;
@@ -13,8 +13,6 @@ interface Post {
 
 function Dashboard() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
   const [contentError, setContentError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -32,7 +30,7 @@ function Dashboard() {
       .catch((error) => console.error("Error fetching posts:", error));
   }, []);
 
-  const validateInputs = () => {
+  const validateInputs = (title: string, content: string) => {
     let isValid = true;
 
     if (!title) {
@@ -58,14 +56,12 @@ function Dashboard() {
     return isValid;
   };
 
-  const handleCreatePost = async () => {
-    if (!validateInputs()) return; // Stop if validation fails
+  const handleCreatePost = async (title: string, content: string) => {
+    if (!validateInputs(title, content)) return;
 
     try {
       const newPost = await api.createPost(title, content);
       setPosts([...posts, newPost]);
-      setTitle("");
-      setContent("");
     } catch (error) {
       console.error("Error creating post:", error);
     }
@@ -82,24 +78,9 @@ function Dashboard() {
   return (
     <div className="container">
       <h1>Dashboard</h1>
-      <div>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        {titleError && <p className="error">{titleError}</p>}
-      </div>
-      <div>
-        <textarea
-          placeholder="Content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-        {contentError && <p className="error">{contentError}</p>}
-      </div>
-      <button onClick={handleCreatePost}>Create Post</button>
+      <PostForm onSubmit={handleCreatePost} buttonText="Create Post" />
+      {titleError && <p className="error">{titleError}</p>}
+      {contentError && <p className="error">{contentError}</p>}
 
       <h2>Your Posts</h2>
       {posts.map((post) => (
