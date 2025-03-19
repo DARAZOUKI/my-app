@@ -10,7 +10,22 @@ export const getPost = async (id: string | undefined) => {
   return res.json();
 };
 export const createPost = async (title: string, content: string) => {
+  if (!title || !content) {
+    throw new Error("Title and content are required");
+  }
+
+  if (title.length < 5) {
+    throw new Error("Title must be at least 5 characters long");
+  }
+
+  if (content.length < 10) {
+    throw new Error("Content must be at least 10 characters long");
+  }
+
   const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("User is not authenticated");
+  }
 
   const res = await fetch(`${API_URL}/posts`, {
     method: "POST",
@@ -28,29 +43,67 @@ export const createPost = async (title: string, content: string) => {
   return res.json();
 };
 
-export const registerUser = async (email: string, password: string) => {
-  const res = await fetch(`${API_URL}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
 
-  if (!res.ok) {
-    throw new Error("Registration failed");
+export const registerUser = async (email: string, password: string) => {
+  if (!email || !password) {
+    throw new Error("Email and password are required");
   }
 
-  return res.json();
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    throw new Error("Invalid email format");
+  }
+
+  if (password.length < 6) {
+    throw new Error("Password must be at least 6 characters long");
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Registration failed");
+    }
+
+    return data;
+  } catch (error: any) {
+    throw new Error(error.message || "Something went wrong");
+  }
 };
 
-export const loginUser = async (email: any, password: any) => {
+
+
+export const loginUser = async (email: string, password: string) => {
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
+
+  if (!/\S+@\S+\.\S+/.test(email)) {
+    throw new Error("Invalid email format");
+  }
+
   const res = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
+
   const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Login failed");
+  }
+
+  localStorage.setItem("token", data.token);
+
   return data.token;
 };
+
 export const updatePost = async (id: string, title: string, content: string) => {
   const token = localStorage.getItem("token");
 
@@ -85,4 +138,3 @@ export const deletePost = async (id: string) => {
 
   return res.json();
 };
-

@@ -16,21 +16,41 @@ const Login: React.FC = () => {
       const res = await axios.post("http://localhost:5000/api/login", { email, password });
       if (auth) {
         auth.login(res.data.token);
-        navigate("/dashboard");  // Redirect to dashboard
+        navigate("/dashboard");
       }
     } catch (error) {
       setError("Invalid username or password");
     }
   };
 
-
   return (
-    <form onSubmit={handleSubmit}>
-      <input type="text" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-      <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-      <button type="submit">Login</button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-    </form>
+    <div className="container mt-5">
+      <div className="card p-4 shadow-sm">
+        <h2 className="text-center mb-3">Login</h2>
+        
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            className="form-control mb-2"
+            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          
+          <input
+            type="password"
+            className="form-control mb-2"
+            placeholder="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          
+          <button className="btn btn-success w-100 mt-2" type="submit">
+            Login
+          </button>
+        </form>
+
+        {error && <p className="text-danger text-center mt-2">{error}</p>}
+      </div>
+    </div>
   );
 };
 

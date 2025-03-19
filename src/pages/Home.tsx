@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api  from "../services/api";
 import { Link } from "react-router-dom";
-import "./Home.css"; // Import the styles
+
 
 interface Post {
   _id: string;

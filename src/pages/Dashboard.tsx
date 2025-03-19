@@ -1,8 +1,9 @@
 import { useState, useEffect, useContext } from "react";
 import * as api from "../services/api";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext"; 
-import "./Dashboard.css";
+import { AuthContext } from "../context/AuthContext";
+import PostItem from "../components/PostItem";
+
 
 interface Post {
   _id: string;
@@ -14,102 +15,96 @@ function Dashboard() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [contentError, setContentError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const auth = useContext(AuthContext); // Get authentication context
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
-const [editTitle, setEditTitle] = useState("");
-const [editContent, setEditContent] = useState("");
+  const auth = useContext(AuthContext);
 
-
-  // 🔹 Redirect to home if not logged in
   useEffect(() => {
     if (!auth?.token) {
       navigate("/");
     }
-  }, [auth?.token, navigate]); // Runs when token changes
+  }, [auth?.token, navigate]);
 
   useEffect(() => {
-    api.getPosts() 
+    api.getPosts()
       .then((response) => setPosts(response))
       .catch((error) => console.error("Error fetching posts:", error));
   }, []);
-  const startEditing = (post: Post) => {
-    setEditingPostId(post._id);
-    setEditTitle(post.title);
-    setEditContent(post.content);
+
+  const validateInputs = () => {
+    let isValid = true;
+
+    if (!title) {
+      setTitleError("Title is required.");
+      isValid = false;
+    } else if (title.length < 5) {
+      setTitleError("Title must be at least 5 characters long.");
+      isValid = false;
+    } else {
+      setTitleError(null);
+    }
+
+    if (!content) {
+      setContentError("Content is required.");
+      isValid = false;
+    } else if (content.length < 10) {
+      setContentError("Content must be at least 10 characters long.");
+      isValid = false;
+    } else {
+      setContentError(null);
+    }
+
+    return isValid;
   };
-  
 
   const handleCreatePost = async () => {
+    if (!validateInputs()) return; // Stop if validation fails
+
     try {
-      const newPost = await api.createPost(title, content); // Call createPost
-      setPosts([...posts, newPost]); // Add new post to state
+      const newPost = await api.createPost(title, content);
+      setPosts([...posts, newPost]);
       setTitle("");
       setContent("");
     } catch (error) {
       console.error("Error creating post:", error);
     }
   };
-  const handleUpdatePost = async () => {
-    if (!editingPostId) return;
-  
-    try {
-      const updatedPost = await api.updatePost(editingPostId, editTitle, editContent);
-      setPosts(posts.map((post) => (post._id === editingPostId ? updatedPost : post)));
-      setEditingPostId(null);
-      setEditTitle("");
-      setEditContent("");
-    } catch (error) {
-      console.error("Error updating post:", error);
-    }
-  };
-  
 
-  const handleDeletePost = async (id: string) => {
-    try {
-      await api.deletePost(id); 
-      setPosts(posts.filter((post) => post._id !== id));
-    } catch (error) {
-      console.error("Error deleting post:", error);
-    }
+  const handleDeletePost = (id: string) => {
+    setPosts(posts.filter((post) => post._id !== id));
   };
-  
+
+  const handleUpdatePost = (updatedPost: Post) => {
+    setPosts(posts.map((post) => (post._id === updatedPost._id ? updatedPost : post)));
+  };
 
   return (
     <div className="container">
       <h1>Dashboard</h1>
-      <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <textarea placeholder="Content" value={content} onChange={(e) => setContent(e.target.value)} />
+      <div>
+        <input
+          type="text"
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        {titleError && <p className="error">{titleError}</p>}
+      </div>
+      <div>
+        <textarea
+          placeholder="Content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
+        {contentError && <p className="error">{contentError}</p>}
+      </div>
       <button onClick={handleCreatePost}>Create Post</button>
 
       <h2>Your Posts</h2>
       {posts.map((post) => (
-  <div key={post._id}>
-    {editingPostId === post._id ? (
-      <div>
-        <input
-          type="text"
-          value={editTitle}
-          onChange={(e) => setEditTitle(e.target.value)}
-        />
-        <textarea
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-        />
-        <button onClick={handleUpdatePost}>Save</button>
-        <button onClick={() => setEditingPostId(null)}>Cancel</button>
-      </div>
-    ) : (
-      <div>
-        <h3>{post.title}</h3>
-        <p>{post.content.substring(0, 100)}...</p>
-        <button onClick={() => startEditing(post)}>Edit</button>
-        <button onClick={() => handleDeletePost(post._id)}>Delete</button>
-      </div>
-    )}
-  </div>
-))}
-
+        <PostItem key={post._id} post={post} onDelete={handleDeletePost} onUpdate={handleUpdatePost} />
+      ))}
     </div>
   );
 }
